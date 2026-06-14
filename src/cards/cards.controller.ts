@@ -71,15 +71,15 @@ export class CardsController {
   @ApiOperation({
     summary: 'Get cards',
   })
-  @UseGuards(JwtGuard)
+  @UseGuards(CustomJwtGuard)
   @Get()
   @SerializeOptions({
     groups: [GROUP_USER],
   })
   @ApiResponse({ status: 200, description: 'Cards retrieved successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async findAll() {
-    return await this.cardsService.findAll();
+  async findAll(@Req() req: { userId: number }) {
+    return await this.cardsService.findAll(req.userId);
   }
 
   /**
@@ -105,10 +105,6 @@ export class CardsController {
   @UseGuards(JwtGuard)
   @Put(':id/likes')
   async like(@Param('id') id: string, @CurrentUser() user: User) {
-    // return this.likesService.like({
-    //   card: { id: +id },
-    //   user: { id: req.user.id } as User,
-    // });
     return await this.cardsService.likeCard({ id: +id }, user);
   }
 
@@ -173,16 +169,6 @@ export class CardsController {
   ) {
     return this.cardsService.getCardsByPage(+page, req.userId);
   }
-
-  // @UseGuards(JwtGuard)
-  // @Get('tag/:tagName/page/:page')
-  // async getCardById(
-  //   @Param('tagName') tagName: string,
-  //   @Param('page') page: string,
-  //   @Req() req: { user: User },
-  // ) {
-  //   return this.cardsService.getCardById(tagName, +page, req.user);
-  // }
 
   /**
    * Finds a card by ID

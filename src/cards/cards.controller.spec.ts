@@ -100,8 +100,12 @@ describe('CardsController', () => {
   });
 
   describe('findAll', () => {
-    it('should call cardsService.findAll', async () => {
-      await controller.findAll();
+    it('should call cardsService.findAll with current user id', async () => {
+      const req = { userId: 1 };
+
+      await controller.findAll(req);
+
+      expect(cardsService.findAll).toHaveBeenCalledWith(1);
       expect(cardsService.findAll).toHaveBeenCalledTimes(1);
     });
   });
