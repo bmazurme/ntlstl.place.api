@@ -87,7 +87,7 @@ export class CardsService {
           'tags',
         )
         .addSelect('0', 'count')
-        .addSelect('false', '"isLiked"')
+        .addSelect('false', 'isLiked')
         .leftJoin('card.user', 'user')
         .where('card.id = :id', { id: savedCard.id })
         .getRawOne();
