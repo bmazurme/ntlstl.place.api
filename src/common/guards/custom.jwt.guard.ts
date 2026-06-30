@@ -5,16 +5,13 @@ import {
   Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { Observable } from 'rxjs';
 
 @Injectable()
 export class CustomJwtGuard implements CanActivate {
   private readonly logger = new Logger('UserService');
   constructor(private readonly jwtService: JwtService) {}
 
-  canActivate(
-    context: ExecutionContext,
-  ): boolean | Promise<boolean> | Observable<boolean> {
+  canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest();
     // const authHeader = request.headers.authorization;
     const token = request.cookies?.access_token;
@@ -24,13 +21,14 @@ export class CustomJwtGuard implements CanActivate {
     // if (authHeader && authHeader.startsWith('Bearer ')) {
     // const token = authHeader.split(' ')[1];
 
-    try {
-      const decoded = this.jwtService.verify(token);
-      request.userId = decoded.sub;
-      this.logger.log(`User id ${decoded.sub} from decoded.sub`);
-    } catch (e) {
-      console.log(e);
-      // Игнорируем ошибку, оставляя userId = -1
+    if (token) {
+      try {
+        const decoded = this.jwtService.verify(token);
+        request.userId = decoded.sub;
+        this.logger.log(`User id ${decoded.sub} from decoded.sub`);
+      } catch (e) {
+        this.logger.warn(`Invalid JWT token: ${(e as Error).message}`);
+      }
     }
     // }
 
