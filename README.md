@@ -1,96 +1,161 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# ntlstl.places
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+[![NestJS](https://img.shields.io/badge/NestJS-E0234E?style=flat-square&logo=nestjs&logoColor=white)](https://nestjs.com/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![TypeORM](https://img.shields.io/badge/TypeORM-FE0803?style=flat-square&logo=typeorm&logoColor=white)](https://typeorm.io/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-13-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![MinIO](https://img.shields.io/badge/MinIO-C72E49?style=flat-square&logo=minio&logoColor=white)](https://min.io/)
+[![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)](https://www.docker.com/)
+[![Jest](https://img.shields.io/badge/Jest-C21325?style=flat-square&logo=jest&logoColor=white)](https://jestjs.io/)
+[![Grafana](https://img.shields.io/badge/Grafana-F46800?style=flat-square&logo=grafana&logoColor=white)](https://grafana.com/)
+[![Prometheus](https://img.shields.io/badge/Prometheus-E6522C?style=flat-square&logo=prometheus&logoColor=white)](https://prometheus.io/)
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+Backend приложения для карточек мест ("places/cards") с тегами, лайками, ролями, загрузкой файлов и авторизацией через Яндекс OAuth.
 
-## Description
+## Стек
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- **Backend**: NestJS, TypeORM, PostgreSQL, Passport (JWT + Yandex OAuth), `@nestjs/swagger`
+- **Файлы**: MinIO (S3-совместимое хранилище), `sharp` для обработки изображений
+- **Логи и метрики**: Winston (консоль, ротация файлов, Loki, опционально Telegram), Prometheus (`@willsoto/nestjs-prometheus`)
+- **Тесты**: Jest (unit + e2e)
+- **Инфраструктура**: Docker Compose (PostgreSQL, pgAdmin, MinIO, Loki, Prometheus, Grafana)
 
-## Installation
+## Структура
 
-```bash
-$ npm install
+```
+nest-places/
+├── src/
+│   ├── auth/       # локальная аутентификация, JWT
+│   ├── oauth/      # Яндекс OAuth
+│   ├── users/      # пользователи
+│   ├── cards/      # карточки мест
+│   ├── tags/       # теги
+│   ├── likes/      # лайки
+│   ├── roles/      # роли
+│   ├── files/       # загрузка и обработка файлов
+│   ├── minio/       # клиент MinIO (глобальный модуль)
+│   ├── hash/        # хеширование паролей
+│   ├── metrics/      # Prometheus-провайдеры
+│   └── common/       # конфиги, гварды, декораторы
+├── migrations/       # SQL для инициализации БД
+├── docker-compose.yml
+└── prometheus.yml
 ```
 
-## Running the app
+## Возможности
 
-```bash
-# development
-$ npm run start
+- Регистрация и вход через Яндекс OAuth, JWT-токен в `access_token` cookie
+- CRUD карточек мест с тегами, привязкой к автору (`eager`-связь с `User`)
+- Лайки карточек — доступны и анонимным пользователям (`CustomJwtGuard` подставляет `userId: -1`)
+- Роли и защита эндпоинтов через `RolesGuard` + `@Roles(...)`
+- Загрузка и обработка изображений (MinIO + `sharp`)
+- Логирование (Winston + Loki, опционально Telegram) и метрики (Prometheus) на `/metrics`
+- Swagger-документация на `/api`
 
-# watch mode
-$ npm run start:dev
+## Быстрый старт
 
-# production mode
-$ npm run start:prod
+### Требования
+
+- Node.js 20+
+- Docker + Docker Compose
+- Зарегистрированное приложение в [Яндекс OAuth](https://oauth.yandex.ru)
+
+### Переменные окружения
+
+Создайте `.env` в корне проекта:
+
+```env
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=newPassword
+POSTGRES_DB=nestplaces
+
+JWT_SECRET=
+
+CLIENT_YANDEX_ID=        # ID приложения Яндекс OAuth
+CLIENT_YANDEX_SECRET=    # Секрет приложения
+CLIENT_YANDEX_REDIRECT=  # http://<host>/oauth/yandex/redirect
+
+MINIO_ENDPOINT=localhost
+MINIO_PORT=9000
+MINIO_ACCESS_KEY=
+MINIO_SECRET_KEY=
+
+TELEGRAM_TOKEN=          # опционально, для алертов в Telegram
+TELEGRAM_CHAT_ID=        # опционально
 ```
 
-## Test
+Опциональные переменные для `docker-compose.yml` (можно задать в `.env` рядом с ним):
+
+| Переменная | По умолчанию | Описание |
+|---|---|---|
+| `POSTGRES_USER` | `postgres` | Пользователь БД |
+| `POSTGRES_PASSWORD` | `newPassword` | Пароль БД |
+| `POSTGRES_DB` | `my-db-name` | Имя базы |
+| `MINIO_ROOT_USER` | `admin` | Логин MinIO |
+| `MINIO_ROOT_PASSWORD` | `very-hard-password` | Пароль MinIO |
+
+### Запуск инфраструктуры
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+docker compose up -d
 ```
 
-## Support
+| Сервис | URL |
+|---|---|
+| PostgreSQL | localhost:5432 |
+| pgAdmin | http://localhost:8080 |
+| MinIO API | http://localhost:9000 |
+| MinIO Console | http://localhost:8000 |
+| Loki | http://localhost:3100 |
+| Grafana | http://localhost:3200 |
+| Prometheus | http://localhost:9090 |
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](LICENSE).
-
+### Запуск приложения
 
 ```bash
-  $ ncu -t minor
-  
-  $ ncu -t minor --upgrade
+npm install
+npm run start:dev
 ```
-# Project: ntlstl.places
 
-### Tech Stack
-![Nodejs](https://img.shields.io/badge/-Nodejs-black?style=flat-square&logo=Node.js)
-![Express](https://img.shields.io/badge/-Express-black?style=flat-square&logo=express)
-![Nest](https://img.shields.io/badge/-Nest-black?style=flat-square&logo=nestjs)
-![Sharp](https://img.shields.io/badge/-Sharp-black?style=flat-square&logo=sharp)
-![TypeORM](https://img.shields.io/badge/-TypeORM-black?style=flat-square&logo=typeorm)
-![PostgreSQL](https://img.shields.io/badge/-PostgreSQL-black?style=flat-square&logo=postgresql)
-![TypeScript](https://img.shields.io/badge/-TypeScript-black?style=flat-square&logo=typescript)
-![Eslint](https://img.shields.io/badge/-Eslint-black?style=flat-square&logo=eslint)
-![PM2](https://img.shields.io/badge/-PM2-black?style=flat-square&logo=pm2)
-![Minio](https://img.shields.io/badge/-Minio-black?style=flat-square&logo=minio)
-![Docker](https://img.shields.io/badge/-Docker-black?style=flat-square&logo=docker)
-![Jest](https://img.shields.io/badge/-Jest-black?style=flat-square&logo=jest)
-![Cypress](https://img.shields.io/badge/-Cypress-black?style=flat-square&logo=cypress)
+API поднимется на `http://localhost:3000`, Swagger — на `http://localhost:3000/api`, метрики Prometheus — на `http://localhost:3000/metrics`.
+
+## Сервисы (docker-compose)
+
+- **postgres** — PostgreSQL 13, данные в `./postgresdata`, инициализация из `migrations/dbinit.sql`
+- **pgadmin** — веб-интерфейс для PostgreSQL
+- **minio** — S3-совместимое хранилище файлов, бакет `main` создаётся автоматически
+- **loki** — хранилище логов приложения
+- **grafana** — дашборды для Prometheus и Loki
+- **prometheus** — сбор метрик с `/metrics` приложения (см. `prometheus.yml`)
+
+Сам backend в `docker-compose.yml` закомментирован — приложение обычно запускается локально через `npm run start:dev` поверх поднятой инфраструктуры.
+
+## Тесты
+
+```bash
+# unit-тесты
+npm run test
+npm run test:watch
+npm run test:cov
+
+# конкретный файл или тест
+npx jest src/cards/cards.service.spec.ts
+npx jest -t "название теста"
+
+# e2e
+npm run test:e2e
+```
+
+## Прочее
+
+```bash
+npm run lint      # eslint --fix
+npm run format    # prettier --write
+npm run doc        # API-документация через compodoc, http://localhost:8088
+```
+
+## Лицензия
+
+[UNLICENSED](LICENSE)
