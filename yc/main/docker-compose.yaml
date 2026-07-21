@@ -1,4 +1,4 @@
-# v.1.0.35
+# v.1.0.36
 version: '3.7'
 services:
   backend:
